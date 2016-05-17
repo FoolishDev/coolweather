@@ -22,7 +22,7 @@ public class CoolWeatherDB {
     /**
      * 数据库版本
      */
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
     private static CoolWeatherDB coolWeatherDB;
     private SQLiteDatabase db;
     /**
@@ -95,7 +95,7 @@ public class CoolWeatherDB {
     public List<City> loadCities(int provinceId) {
         List<City> list = new ArrayList<City>();
         Cursor cursor = db.query("City", null, "province_id = ?",
-                new String[]{String.valueOf(provinceId)}, null, null, null);
+                new String[]{ String.valueOf(provinceId) }, null, null, null);
         if(cursor.moveToFirst()) {
             do {
                 City city = new City();
