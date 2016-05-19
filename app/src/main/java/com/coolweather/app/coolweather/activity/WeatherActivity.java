@@ -1,6 +1,7 @@
 package com.coolweather.app.coolweather.activity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -8,6 +9,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -21,7 +23,7 @@ import java.net.HttpURLConnection;
 /**
  * Created by syt on 16/5/18.
  */
-public class WeatherActivity extends Activity{
+public class WeatherActivity extends Activity implements View.OnClickListener{
     private LinearLayout weatherInfoLayout;
     /**
      * 用于显示城市名
@@ -48,6 +50,31 @@ public class WeatherActivity extends Activity{
      */
     private TextView currentDataText;
 
+    /**
+     * 切换城市
+     */
+    private Button switchCity;
+
+    /**
+     *更新天气按钮
+     */
+    private Button refreshWeather;
+
+    /**
+     * 认证ID
+     */
+    private static final String CHECK_ID = "09b919bcca084045aba389d7a9818b40";
+
+    /**
+     * cityName
+     */
+    private String cityName;
+
+    /**
+     * weatherCode
+     */
+    private String weatherCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +87,10 @@ public class WeatherActivity extends Activity{
         temp1Text = (TextView) findViewById(R.id.temp1);
         temp2Text = (TextView) findViewById(R.id.temp2);
         currentDataText = (TextView) findViewById(R.id.current_data);
+        switchCity = (Button) findViewById(R.id.switch_city);
+        refreshWeather = (Button) findViewById(R.id.refresh_weather);
+        switchCity.setOnClickListener(this);
+        refreshWeather.setOnClickListener(this);
         String countyCode = getIntent().getStringExtra("county_code");
         if(!TextUtils.isEmpty(countyCode)) {
             //有县级代号时就去查询天气
@@ -84,7 +115,8 @@ public class WeatherActivity extends Activity{
      * 查询天气代号所对应的天气
      */
     private void queryWeatherInfo(String weatherCode) {
-        String address = "http://www.weather.com.cn/adat/cityinfo/" + weatherCode + ".html";
+        String address = "https://api.heweather.com/x3/weather?cityid=" + weatherCode + "&key=" +
+                CHECK_ID;
         queryFromServer(address, "weatherCode");
     }
     /**
@@ -95,13 +127,13 @@ public class WeatherActivity extends Activity{
             @Override
             public void onFinish(String response) {
                 if("countyCode".equals(type)) {
-                    Log.d(getClass().getSimpleName(), response);
+                    Log.d(getClass().getSimpleName() + "countyCode", response);
                     if(!TextUtils.isEmpty(response)) {
                         //从服务器返回的数据中解析出天气代号
                         String[] array = response.split("\\|");
                         if(array != null && array.length == 2) {
-                            String weatherCode = array[1];
-                            Log.d(getClass().getSimpleName(), weatherCode);
+                            weatherCode = "CN" + array[1];
+                            Log.d(getClass().getSimpleName() + "weatherCode", weatherCode);
                             queryWeatherInfo(weatherCode);
                         }
                     }
@@ -140,5 +172,28 @@ public class WeatherActivity extends Activity{
         currentDataText.setText(prefs.getString("current_data", " "));
         weatherInfoLayout.setVisibility(View.VISIBLE);
         citynameText.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.switch_city:
+                Intent intent = new Intent(this, ChooseAreaActivity.class);
+                intent.putExtra("from_weather_activity", true);
+                startActivity(intent);
+                finish();
+                break;
+            case R.id.refresh_weather:
+                publishText.setText("同步中...");
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                String weatherCode = prefs.getString("weather_code", " ");
+                Log.d(getClass().getSimpleName(), weatherCode);
+                if(!TextUtils.isEmpty(weatherCode)) {
+                    queryWeatherInfo(weatherCode);
+                }
+                break;
+            default:
+                break;
+        }
     }
 }

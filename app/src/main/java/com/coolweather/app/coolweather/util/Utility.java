@@ -11,6 +11,7 @@ import com.coolweather.app.coolweather.model.CoolWeatherDB;
 import com.coolweather.app.coolweather.model.County;
 import com.coolweather.app.coolweather.model.Province;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -94,14 +95,21 @@ public class Utility {
      */
     public static void handleWeatherResponse(Context context, String response) {
         try {
-            JSONObject jsonObject = new JSONObject(response);
-            JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
-            String cityName = weatherInfo.getString("city");
-            String weatherCode = weatherInfo.getString("cityid");
-            String temp1 = weatherInfo.getString("temp1");
-            String temp2 = weatherInfo.getString("temp2");
-            String weatherDesp = weatherInfo.getString("weather");
-            String publishTime = weatherInfo.getString("ptime");
+            Log.d("response", response);
+            JSONObject responseObject = new JSONObject(response);
+            JSONArray heWeather = responseObject.getJSONArray("HeWeather data service 3.0");
+            JSONObject jsonObject = heWeather.getJSONObject(0);
+            JSONObject city = jsonObject.getJSONObject("basic");
+            String cityName = city.getString("city");
+            String weatherCode = city.getString("id");
+            JSONArray daily = jsonObject.getJSONArray("daily_forecast");
+            JSONObject weatherInfo = daily.getJSONObject(0);
+            String publishTime = weatherInfo.getString("date");
+            JSONObject condObject = weatherInfo.getJSONObject("cond");
+            String weatherDesp = condObject.getString("txt_d");
+            JSONObject tmpObject = weatherInfo.getJSONObject("tmp");
+            String temp1 = tmpObject.getString("min");
+            String temp2 = tmpObject.getString("max");
             saveWeatherInfo(context, cityName, weatherCode, temp1, temp2, weatherDesp, publishTime);
         }catch (JSONException e) {
             e.printStackTrace();
